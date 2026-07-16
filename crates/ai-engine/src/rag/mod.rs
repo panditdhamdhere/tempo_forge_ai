@@ -1,5 +1,13 @@
+mod embed;
+mod qdrant;
+
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use tempoforge_common::AppResult;
+use tracing::warn;
+
+pub use embed::embed_text;
+pub use qdrant::QdrantHttpRag;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RagChunk {
@@ -9,7 +17,7 @@ pub struct RagChunk {
     pub score: f32,
 }
 
-/// Retrieval port. Implementations may use Qdrant (`rag` feature) or an in-memory store.
+/// Retrieval port. Implementations may use Qdrant or an in-memory store.
 #[async_trait::async_trait]
 pub trait RagStore: Send + Sync {
     async fn upsert(&self, collection: &str, chunks: Vec<RagChunk>) -> AppResult<()>;
@@ -81,5 +89,24 @@ impl RagStore for InMemoryRag {
         scored.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
         scored.truncate(limit as usize);
         Ok(scored)
+    }
+}
+
+/// Prefer Qdrant when reachable; otherwise fall back to in-memory seed docs.
+pub async fn build_rag_store(qdrant_url: Option<String>) -> Arc<dyn RagStore> {
+    let Some(url) = qdrant_url.filter(|u| !u.is_empty()) else {
+        return Arc::new(InMemoryRag::with_seed_docs());
+    };
+
+    let qdrant = QdrantHttpRag::new(url);
+    match qdrant.seed_defaults().await {
+        Ok(()) => {
+            tracing::info!("using Qdrant RAG store");
+            Arc::new(qdrant)
+        }
+        Err(err) => {
+            warn!(error = %err, "Qdrant unavailable — falling back to in-memory RAG");
+            Arc::new(InMemoryRag::with_seed_docs())
+        }
     }
 }

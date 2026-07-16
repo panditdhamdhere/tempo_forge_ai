@@ -50,7 +50,9 @@ impl AppState {
         };
 
         let provider = provider_from_env()?;
-        let ai = Arc::new(AgentOrchestrator::with_defaults(provider));
+        let qdrant_url = std::env::var("QDRANT_URL").ok();
+        let rag = tempoforge_ai_engine::rag::build_rag_store(qdrant_url).await;
+        let ai = Arc::new(AgentOrchestrator::new(provider, rag));
         let tempo = TempoClient::from_env();
         let explorer = ExplorerService::new(tempo.clone());
         let analytics = AnalyticsService::new(tempo.clone());

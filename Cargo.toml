@@ -54,7 +54,7 @@ hmac = "0.12"
 hex = "0.4"
 base64 = "0.22"
 rand = "0.8"
-uuid = { version = "1", features = ["v4", "serde"] }
+uuid = { version = "1", features = ["v4", "v5", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 secrecy = { version = "0.10", features = ["serde"] }
 

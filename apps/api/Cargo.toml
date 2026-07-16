@@ -13,6 +13,10 @@ path = "src/main.rs"
 name = "seed"
 path = "src/bin/seed.rs"
 
+[[bin]]
+name = "indexer"
+path = "src/bin/indexer.rs"
+
 [dependencies]
 tempoforge-common.workspace = true
 tempoforge-auth.workspace = true

@@ -16,6 +16,7 @@
     "typecheck": "turbo run typecheck",
     "db:migrate": "sqlx migrate run",
     "db:seed": "cargo run -p tempoforge-api --bin seed",
+    "indexer": "cargo run -p tempoforge-api --bin indexer",
     "docker:up": "docker compose -f infrastructure/docker/docker-compose.yml up -d",
     "docker:down": "docker compose -f infrastructure/docker/docker-compose.yml down",
     "setup": "bash scripts/setup.sh",
