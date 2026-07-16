@@ -39,6 +39,7 @@ secrets/
 contracts/cache
 contracts/out
 contracts/broadcast
+contracts/lib
 
 # Misc
 .vercel

@@ -29,6 +29,17 @@ echo "==> Running migrations + seed"
 export DATABASE_URL="${DATABASE_URL:-postgres://tempoforge:tempoforge@localhost:5432/tempoforge}"
 cargo run -p tempoforge-api --bin seed
 
+if command -v forge >/dev/null 2>&1; then
+  echo "==> Installing Foundry dependencies"
+  (
+    cd contracts
+    forge install foundry-rs/forge-std@v1.9.4 OpenZeppelin/openzeppelin-contracts@v5.2.0 --no-git --shallow
+    forge test
+  )
+else
+  echo "Skipping Foundry install (forge not found). Install from https://book.getfoundry.sh/"
+fi
+
 echo "==> Checking Rust workspace"
 cargo check --workspace
 
