@@ -4,11 +4,12 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Topbar } from "@/components/dashboard/topbar";
 import { Button } from "@/components/ui/button";
-import { api } from "@/lib/api";
+import { useAuthedApi } from "@/hooks/use-authed-api";
 
 export default function DashboardPage() {
-  const projects = useQuery({ queryKey: ["projects"], queryFn: api.listProjects });
-  const analytics = useQuery({ queryKey: ["analytics"], queryFn: api.analytics });
+  const api = useAuthedApi();
+  const projects = useQuery({ queryKey: ["projects"], queryFn: () => api.listProjects() });
+  const analytics = useQuery({ queryKey: ["analytics"], queryFn: () => api.analytics() });
 
   return (
     <>
@@ -25,11 +26,7 @@ export default function DashboardPage() {
           />
           <Stat
             label="Projects"
-            value={
-              projects.isLoading
-                ? "…"
-                : String(projects.data?.length ?? 0)
-            }
+            value={projects.isLoading ? "…" : String(projects.data?.length ?? 0)}
           />
           <Stat label="Network" value={analytics.data?.network.network ?? "testnet"} />
         </section>

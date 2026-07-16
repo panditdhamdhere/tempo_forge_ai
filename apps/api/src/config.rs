@@ -15,6 +15,8 @@ pub struct Config {
     pub encryption_key: String,
     pub rate_limit_per_minute: u32,
     pub allow_dev_auth: bool,
+    pub stripe_secret_key: String,
+    pub stripe_webhook_secret: String,
 }
 
 impl Config {
@@ -58,6 +60,8 @@ impl Config {
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(120),
             allow_dev_auth,
+            stripe_secret_key: std::env::var("STRIPE_SECRET_KEY").unwrap_or_default(),
+            stripe_webhook_secret: std::env::var("STRIPE_WEBHOOK_SECRET").unwrap_or_default(),
         })
     }
 }

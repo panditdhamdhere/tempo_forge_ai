@@ -4,7 +4,7 @@ import { FormEvent, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Topbar } from "@/components/dashboard/topbar";
 import { Button } from "@/components/ui/button";
-import { api } from "@/lib/api";
+import { useAuthedApi } from "@/hooks/use-authed-api";
 
 const sample = `// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
@@ -30,6 +30,7 @@ contract Vault {
 `;
 
 export default function AuditorPage() {
+  const api = useAuthedApi();
   const [source, setSource] = useState(sample);
   const audit = useMutation({
     mutationFn: () => api.audit("Dashboard audit", source),

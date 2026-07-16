@@ -4,7 +4,7 @@ import { FormEvent, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Topbar } from "@/components/dashboard/topbar";
 import { Button } from "@/components/ui/button";
-import { api } from "@/lib/api";
+import { useAuthedApi } from "@/hooks/use-authed-api";
 
 const agents = [
   "planner",
@@ -17,6 +17,7 @@ const agents = [
 ] as const;
 
 export default function AssistantPage() {
+  const api = useAuthedApi();
   const [agent, setAgent] = useState<(typeof agents)[number]>("codegen");
   const [prompt, setPrompt] = useState(
     "Create an ERC20 with staking for Tempo testnet using OpenZeppelin.",

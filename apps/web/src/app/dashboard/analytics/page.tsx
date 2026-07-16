@@ -11,12 +11,13 @@ import {
   YAxis,
 } from "recharts";
 import { Topbar } from "@/components/dashboard/topbar";
-import { api } from "@/lib/api";
+import { useAuthedApi } from "@/hooks/use-authed-api";
 
 export default function AnalyticsPage() {
+  const api = useAuthedApi();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["analytics"],
-    queryFn: api.analytics,
+    queryFn: () => api.analytics(),
   });
 
   const series =

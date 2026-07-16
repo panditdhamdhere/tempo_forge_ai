@@ -1,6 +1,7 @@
 mod ai;
 mod analytics;
 mod audit;
+mod billing;
 mod deployments;
 mod explorer;
 mod health;
@@ -34,6 +35,10 @@ pub fn router(state: AppState) -> Router {
         .route("/analytics/dashboard", get(analytics::dashboard))
         .route("/deployments/plan", post(deployments::plan_deployment))
         .route("/sdk/generate", post(sdk::generate_sdk))
+        .route("/billing/status", get(billing::billing_status))
+        .route("/billing/checkout", post(billing::create_checkout))
+        .route("/billing/portal", post(billing::create_portal))
+        .route("/billing/webhook", post(billing::stripe_webhook))
         .route("/openapi.json", get(openapi_spec));
 
     Router::new()
@@ -72,7 +77,11 @@ async fn openapi_spec() -> Json<serde_json::Value> {
             "/explorer/address/{address}": {"get": {"summary": "Get address"}},
             "/analytics/dashboard": {"get": {"summary": "Analytics dashboard"}},
             "/deployments/plan": {"post": {"summary": "Plan deployment"}},
-            "/sdk/generate": {"post": {"summary": "Generate SDK"}}
+            "/sdk/generate": {"post": {"summary": "Generate SDK"}},
+            "/billing/status": {"get": {"summary": "Billing status"}},
+            "/billing/checkout": {"post": {"summary": "Create Stripe Checkout session"}},
+            "/billing/portal": {"post": {"summary": "Create Stripe Customer Portal session"}},
+            "/billing/webhook": {"post": {"summary": "Stripe webhooks"}}
         }
     }))
 }

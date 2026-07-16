@@ -50,3 +50,6 @@ uuid.workspace = true
 validator.workspace = true
 blake3.workspace = true
 parking_lot.workspace = true
+hmac.workspace = true
+sha2.workspace = true
+bytes.workspace = true

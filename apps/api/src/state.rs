@@ -1,5 +1,6 @@
 use crate::config::Config;
 use crate::services::rate_limit::RateLimiter;
+use crate::services::stripe::StripeClient;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
 use std::sync::Arc;
@@ -22,6 +23,7 @@ pub struct AppState {
     pub explorer: ExplorerService,
     pub analytics: AnalyticsService,
     pub rate_limiter: RateLimiter,
+    pub stripe: StripeClient,
 }
 
 impl AppState {
@@ -32,7 +34,6 @@ impl AppState {
             .await
             .map_err(|e| AppError::Internal(format!("database connect failed: {e}")))?;
 
-        // Migrations are optional at boot so the API can start before Postgres is ready in some CI paths.
         if let Err(err) = sqlx::migrate!("../../migrations").run(&db).await {
             tracing::warn!(error = %err, "migration run skipped/failed — ensure DB is up");
         }
@@ -54,6 +55,15 @@ impl AppState {
         let explorer = ExplorerService::new(tempo.clone());
         let analytics = AnalyticsService::new(tempo.clone());
         let rate_limiter = RateLimiter::new(config.rate_limit_per_minute);
+        let stripe = StripeClient::new(
+            config.stripe_secret_key.clone(),
+            config.stripe_webhook_secret.clone(),
+            config.app_url.clone(),
+        );
+
+        if !stripe.configured() {
+            tracing::warn!("Stripe not configured — billing checkout disabled until STRIPE_SECRET_KEY is set");
+        }
 
         Ok(Self {
             config,
@@ -64,6 +74,7 @@ impl AppState {
             explorer,
             analytics,
             rate_limiter,
+            stripe,
         })
     }
 }

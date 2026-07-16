@@ -4,11 +4,12 @@ import { FormEvent, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Topbar } from "@/components/dashboard/topbar";
 import { Button } from "@/components/ui/button";
-import { api } from "@/lib/api";
+import { useAuthedApi } from "@/hooks/use-authed-api";
 
 export default function ProjectsPage() {
   const qc = useQueryClient();
-  const projects = useQuery({ queryKey: ["projects"], queryFn: api.listProjects });
+  const api = useAuthedApi();
+  const projects = useQuery({ queryKey: ["projects"], queryFn: () => api.listProjects() });
   const [name, setName] = useState("");
   const create = useMutation({
     mutationFn: api.createProject,
