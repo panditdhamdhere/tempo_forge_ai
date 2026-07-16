@@ -5,10 +5,15 @@ mod billing;
 mod deployments;
 mod explorer;
 mod health;
+mod keys;
+mod metrics;
 mod projects;
 mod sdk;
+mod secrets;
 
+use crate::middleware::metrics::track_metrics;
 use crate::middleware::request_id::attach_request_id;
+use crate::middleware::security_headers::security_headers;
 use crate::state::AppState;
 use axum::{
     Json, Router,
@@ -16,12 +21,14 @@ use axum::{
     routing::{get, post},
 };
 use tower_http::cors::{Any, CorsLayer};
+use tower_http::limit::RequestBodyLimitLayer;
 use tower_http::trace::TraceLayer;
 
 pub fn router(state: AppState) -> Router {
     let api = Router::new()
         .route("/health", get(health::health))
         .route("/ready", get(health::ready))
+        .route("/metrics", get(metrics::prometheus_metrics))
         .route(
             "/projects",
             get(projects::list_projects).post(projects::create_project),
@@ -52,10 +59,17 @@ pub fn router(state: AppState) -> Router {
         .route("/billing/checkout", post(billing::create_checkout))
         .route("/billing/portal", post(billing::create_portal))
         .route("/billing/webhook", post(billing::stripe_webhook))
+        .route("/keys", get(keys::list_keys).post(keys::create_key))
+        .route("/keys/{id}/revoke", post(keys::revoke_key))
+        .route("/secrets", get(secrets::list_secrets).post(secrets::upsert_secret))
+        .route("/secrets/{name}", get(secrets::reveal_secret))
         .route("/openapi.json", get(openapi_spec));
 
     Router::new()
         .nest("/api/v1", api)
+        .layer(RequestBodyLimitLayer::new(2 * 1024 * 1024))
+        .layer(middleware::from_fn(security_headers))
+        .layer(middleware::from_fn(track_metrics))
         .layer(middleware::from_fn(attach_request_id))
         .layer(TraceLayer::new_for_http())
         .layer(
@@ -79,21 +93,14 @@ async fn openapi_spec() -> Json<serde_json::Value> {
         "paths": {
             "/health": {"get": {"summary": "Liveness"}},
             "/ready": {"get": {"summary": "Readiness"}},
+            "/metrics": {"get": {"summary": "Prometheus metrics"}},
+            "/keys": {"get": {"summary": "List API keys"}, "post": {"summary": "Create API key"}},
+            "/secrets": {"get": {"summary": "List encrypted secrets"}, "post": {"summary": "Upsert secret"}},
             "/projects": {
                 "get": {"summary": "List projects"},
                 "post": {"summary": "Create project"}
             },
             "/ai/agents/{agent}": {"post": {"summary": "Run AI agent"}},
-            "/ai/chat": {"post": {"summary": "AI chat"}},
-            "/audit": {"post": {"summary": "Audit Solidity"}},
-            "/explorer/tx/{hash}": {"get": {"summary": "Get transaction"}},
-            "/explorer/address/{address}": {"get": {"summary": "Get address"}},
-            "/analytics/dashboard": {"get": {"summary": "Analytics dashboard"}},
-            "/deployments/plan": {"post": {"summary": "Plan deployment"}},
-            "/sdk/generate": {"post": {"summary": "Generate SDK"}},
-            "/billing/status": {"get": {"summary": "Billing status"}},
-            "/billing/checkout": {"post": {"summary": "Create Stripe Checkout session"}},
-            "/billing/portal": {"post": {"summary": "Create Stripe Customer Portal session"}},
             "/billing/webhook": {"post": {"summary": "Stripe webhooks"}}
         }
     }))

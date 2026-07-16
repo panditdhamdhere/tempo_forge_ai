@@ -2,11 +2,11 @@ use std::net::IpAddr;
 use tempoforge_common::{AppError, AppResult};
 
 #[derive(Clone, Debug)]
-#[allow(dead_code)]
 pub struct Config {
     pub host: IpAddr,
     pub port: u16,
     pub database_url: String,
+    #[allow(dead_code)]
     pub redis_url: String,
     pub app_url: String,
     pub clerk_jwks_url: String,
