@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Topbar } from "@/components/dashboard/topbar";
 import { Button } from "@/components/ui/button";
 import { useAuthedApi } from "@/hooks/use-authed-api";
@@ -18,23 +18,46 @@ const agents = [
 
 export default function AssistantPage() {
   const api = useAuthedApi();
+  const qc = useQueryClient();
   const [agent, setAgent] = useState<(typeof agents)[number]>("codegen");
+  const [conversationId, setConversationId] = useState<string | undefined>();
   const [prompt, setPrompt] = useState(
     "Create an ERC20 with staking for Tempo testnet using OpenZeppelin.",
   );
+
+  const conversations = useQuery({
+    queryKey: ["conversations"],
+    queryFn: () => api.listConversations(),
+  });
+
+  const messages = useQuery({
+    queryKey: ["conversation-messages", conversationId],
+    queryFn: () => api.conversationMessages(conversationId!),
+    enabled: Boolean(conversationId),
+  });
+
   const run = useMutation({
-    mutationFn: () => api.runAgent(agent, prompt),
+    mutationFn: () => api.runAgent(agent, prompt, conversationId),
+    onSuccess: (data) => {
+      setConversationId(data.conversation_id);
+      setPrompt("");
+      qc.invalidateQueries({ queryKey: ["conversations"] });
+      qc.invalidateQueries({
+        queryKey: ["conversation-messages", data.conversation_id],
+      });
+    },
   });
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
+    if (!prompt.trim()) return;
     run.mutate();
   };
 
   return (
     <>
       <Topbar title="AI Assistant" />
-      <div className="grid gap-6 p-6 lg:grid-cols-[280px_1fr]">
+      <div className="grid gap-6 p-6 lg:grid-cols-[240px_220px_1fr]">
         <aside className="glass h-fit rounded-3xl p-4">
           <p className="text-xs uppercase tracking-[0.18em] text-white/45">Agent</p>
           <div className="mt-3 space-y-1">
@@ -52,7 +75,57 @@ export default function AssistantPage() {
             ))}
           </div>
         </aside>
+
+        <aside className="glass h-fit max-h-[70vh] overflow-auto rounded-3xl p-4">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs uppercase tracking-[0.18em] text-white/45">
+              History
+            </p>
+            <button
+              type="button"
+              className="text-xs text-[var(--accent)]"
+              onClick={() => setConversationId(undefined)}
+            >
+              New
+            </button>
+          </div>
+          <div className="mt-3 space-y-1">
+            {conversations.data?.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setConversationId(c.id)}
+                className={`block w-full rounded-xl px-3 py-2 text-left text-xs ${
+                  conversationId === c.id
+                    ? "bg-white/10 text-white"
+                    : "text-white/60 hover:bg-white/5"
+                }`}
+              >
+                <span className="line-clamp-2">{c.title}</span>
+              </button>
+            ))}
+            {!conversations.data?.length && (
+              <p className="px-1 text-xs text-white/40">No chats yet</p>
+            )}
+          </div>
+        </aside>
+
         <section className="space-y-4">
+          {conversationId && (
+            <div className="glass max-h-[45vh] space-y-3 overflow-auto rounded-3xl p-5">
+              {messages.data?.map((m) => (
+                <div key={m.id}>
+                  <p className="text-[10px] uppercase tracking-wider text-white/40">
+                    {m.role}
+                  </p>
+                  <pre className="mt-1 whitespace-pre-wrap text-sm text-white/80">
+                    {m.content}
+                  </pre>
+                </div>
+              ))}
+            </div>
+          )}
+
           <form onSubmit={onSubmit} className="glass rounded-3xl p-5">
             <textarea
               value={prompt}
@@ -60,24 +133,28 @@ export default function AssistantPage() {
               rows={6}
               className="w-full resize-y rounded-2xl border border-white/10 bg-black/20 p-4 outline-none focus:border-[var(--accent)]"
             />
-            <div className="mt-4 flex justify-end">
-              <Button type="submit" disabled={run.isPending}>
+            <div className="mt-4 flex items-center justify-between gap-3">
+              <p className="text-xs text-white/45">
+                {conversationId
+                  ? `Conversation ${conversationId.slice(0, 8)}…`
+                  : "Starts a new persisted conversation"}
+              </p>
+              <Button type="submit" disabled={run.isPending || !prompt.trim()}>
                 {run.isPending ? "Thinking…" : "Run agent"}
               </Button>
             </div>
           </form>
+
           {run.data && (
             <article className="glass rounded-3xl p-5">
               <p className="text-xs text-white/45">
-                model {run.data.model} · {run.data.usage.total_tokens} tokens
+                model {run.data.response.model} ·{" "}
+                {run.data.response.usage.total_tokens} tokens
               </p>
-              <pre className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-white/85">
-                {run.data.content}
-              </pre>
-              {run.data.files.length > 0 && (
-                <div className="mt-6 space-y-3">
+              {run.data.response.files.length > 0 && (
+                <div className="mt-4 space-y-3">
                   <h3 className="font-semibold">Generated files</h3>
-                  {run.data.files.map((f) => (
+                  {run.data.response.files.map((f) => (
                     <details key={f.path} className="rounded-xl border border-white/10 p-3">
                       <summary className="cursor-pointer text-sm text-[var(--accent)]">
                         {f.path}

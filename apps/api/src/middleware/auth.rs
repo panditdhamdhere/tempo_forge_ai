@@ -31,7 +31,7 @@ impl FromRequestParts<AppState> for AuthUser {
 
         let Some(header) = auth_header else {
             if state.config.allow_dev_auth {
-                return Ok(AuthUser(dev_context()));
+                return Ok(AuthUser(ensure_dev_user(state).await?));
             }
             return Err(AppError::Unauthorized("missing Authorization header".into()));
         };
@@ -41,12 +41,12 @@ impl FromRequestParts<AppState> for AuthUser {
             .ok_or_else(|| AppError::Unauthorized("expected Bearer token".into()))?;
 
         if token == "dev" && state.config.allow_dev_auth {
-            return Ok(AuthUser(dev_context()));
+            return Ok(AuthUser(ensure_dev_user(state).await?));
         }
 
         let Some(clerk) = &state.clerk else {
             if state.config.allow_dev_auth {
-                return Ok(AuthUser(dev_context()));
+                return Ok(AuthUser(ensure_dev_user(state).await?));
             }
             return Err(AppError::Unauthorized("auth provider not configured".into()));
         };
@@ -56,6 +56,27 @@ impl FromRequestParts<AppState> for AuthUser {
         ctx.user_id = upsert_user(state, &ctx).await?;
         Ok(AuthUser(ctx))
     }
+}
+
+async fn ensure_dev_user(state: &AppState) -> Result<AuthContext, AppError> {
+    let mut ctx = dev_context();
+    let id = sqlx::query_scalar::<_, Uuid>(
+        r#"
+        INSERT INTO users (id, clerk_user_id, email, name)
+        VALUES ($1, $2, $3, 'Dev User')
+        ON CONFLICT (clerk_user_id)
+        DO UPDATE SET email = EXCLUDED.email, updated_at = NOW()
+        RETURNING id
+        "#,
+    )
+    .bind(ctx.user_id.as_uuid())
+    .bind(&ctx.clerk_user_id)
+    .bind(&ctx.email)
+    .fetch_one(&state.db)
+    .await
+    .map_err(|e| AppError::Internal(format!("dev user upsert failed: {e}")))?;
+    ctx.user_id = UserId(id);
+    Ok(ctx)
 }
 
 fn dev_context() -> AuthContext {

@@ -28,12 +28,25 @@ pub fn router(state: AppState) -> Router {
         )
         .route("/ai/agents/{agent}", post(ai::run_agent))
         .route("/ai/chat", post(ai::chat))
+        .route("/ai/conversations", get(ai::list_conversations))
+        .route(
+            "/ai/conversations/{id}/messages",
+            get(ai::get_conversation_messages),
+        )
         .route("/audit", post(audit::run_audit))
         .route("/explorer/tx/{hash}", get(explorer::get_transaction))
         .route("/explorer/address/{address}", get(explorer::get_address))
         .route("/explorer/blocks/latest", get(explorer::latest_block))
         .route("/analytics/dashboard", get(analytics::dashboard))
         .route("/deployments/plan", post(deployments::plan_deployment))
+        .route(
+            "/deployments",
+            get(deployments::list_deployments).post(deployments::create_deployment),
+        )
+        .route(
+            "/deployments/{id}",
+            get(deployments::get_deployment).patch(deployments::update_deployment),
+        )
         .route("/sdk/generate", post(sdk::generate_sdk))
         .route("/billing/status", get(billing::billing_status))
         .route("/billing/checkout", post(billing::create_checkout))

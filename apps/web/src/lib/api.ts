@@ -1,8 +1,11 @@
 import type {
-  AgentResponse,
+  AgentRunResult,
   AnalyticsDashboard,
   ApiResponse,
   AuditReport,
+  Conversation,
+  ConversationMessage,
+  Deployment,
   Project,
 } from "@tempoforge/types";
 import { getApiBase } from "./utils";
@@ -63,10 +66,60 @@ export const api = {
       { method: "POST", body: JSON.stringify(body) },
       token,
     ),
-  runAgent: (agent: string, prompt: string, token?: string) =>
-    request<AgentResponse>(
+  runAgent: (
+    agent: string,
+    prompt: string,
+    token?: string,
+    conversationId?: string,
+  ) =>
+    request<AgentRunResult>(
       `/api/v1/ai/agents/${agent}`,
-      { method: "POST", body: JSON.stringify({ prompt }) },
+      {
+        method: "POST",
+        body: JSON.stringify({
+          prompt,
+          conversation_id: conversationId,
+        }),
+      },
+      token,
+    ),
+  listConversations: (token?: string) =>
+    request<Conversation[]>("/api/v1/ai/conversations", {}, token),
+  conversationMessages: (id: string, token?: string) =>
+    request<ConversationMessage[]>(
+      `/api/v1/ai/conversations/${id}/messages`,
+      {},
+      token,
+    ),
+  listDeployments: (token?: string, projectId?: string) =>
+    request<Deployment[]>(
+      projectId
+        ? `/api/v1/deployments?project_id=${projectId}`
+        : "/api/v1/deployments",
+      {},
+      token,
+    ),
+  createDeployment: (
+    body: {
+      project_id: string;
+      contract_name: string;
+      network?: string;
+    },
+    token?: string,
+  ) =>
+    request<Deployment>(
+      "/api/v1/deployments",
+      { method: "POST", body: JSON.stringify(body) },
+      token,
+    ),
+  updateDeployment: (
+    id: string,
+    body: { status: string; address?: string; tx_hash?: string },
+    token?: string,
+  ) =>
+    request<Deployment>(
+      `/api/v1/deployments/${id}`,
+      { method: "PATCH", body: JSON.stringify(body) },
       token,
     ),
   audit: (title: string, source: string, token?: string) =>

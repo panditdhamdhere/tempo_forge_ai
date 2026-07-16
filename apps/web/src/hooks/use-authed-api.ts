@@ -21,8 +21,22 @@ export function useAuthedApi() {
     listProjects: () => withToken((t) => api.listProjects(t)),
     createProject: (body: { name: string; slug: string; description?: string }) =>
       withToken((t) => api.createProject(body, t)),
-    runAgent: (agent: string, prompt: string) =>
-      withToken((t) => api.runAgent(agent, prompt, t)),
+    runAgent: (agent: string, prompt: string, conversationId?: string) =>
+      withToken((t) => api.runAgent(agent, prompt, t, conversationId)),
+    listConversations: () => withToken((t) => api.listConversations(t)),
+    conversationMessages: (id: string) =>
+      withToken((t) => api.conversationMessages(id, t)),
+    listDeployments: (projectId?: string) =>
+      withToken((t) => api.listDeployments(t, projectId)),
+    createDeployment: (body: {
+      project_id: string;
+      contract_name: string;
+      network?: string;
+    }) => withToken((t) => api.createDeployment(body, t)),
+    updateDeployment: (
+      id: string,
+      body: { status: string; address?: string; tx_hash?: string },
+    ) => withToken((t) => api.updateDeployment(id, body, t)),
     audit: (title: string, source: string) =>
       withToken((t) => api.audit(title, source, t)),
     analytics: () => withToken((t) => api.analytics(t)),

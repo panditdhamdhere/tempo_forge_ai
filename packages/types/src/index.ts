@@ -74,6 +74,44 @@ export interface AgentResponse {
   };
 }
 
+export interface AgentRunResult {
+  conversation_id: string;
+  response: AgentResponse;
+}
+
+export interface Conversation {
+  id: string;
+  org_id?: string | null;
+  project_id?: string | null;
+  user_id: string;
+  agent: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConversationMessage {
+  id: string;
+  conversation_id: string;
+  role: string;
+  content: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface Deployment {
+  id: string;
+  project_id: string;
+  contract_id?: string | null;
+  network: NetworkEnv | string;
+  status: "pending" | "submitted" | "confirmed" | "verified" | "failed" | string;
+  address?: string | null;
+  tx_hash?: string | null;
+  artifact: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AnalyticsDashboard {
   network: {
     network: string;

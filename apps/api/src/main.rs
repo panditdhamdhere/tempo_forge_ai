@@ -1,5 +1,6 @@
 mod config;
 mod middleware;
+mod repositories;
 mod routes;
 mod services;
 mod state;
