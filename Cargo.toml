@@ -1,0 +1,108 @@
+[workspace]
+resolver = "2"
+members = [
+  "apps/api",
+  "apps/cli",
+  "crates/common",
+  "crates/auth",
+  "crates/ai-engine",
+  "crates/blockchain",
+  "crates/indexer",
+  "crates/explorer",
+  "crates/analytics",
+  "crates/deployment",
+  "crates/security",
+  "crates/sdk-generator",
+]
+default-members = ["apps/api"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["TempoForge AI <engineering@tempoforge.ai>"]
+repository = "https://github.com/tempoforge/tempoforge"
+
+[workspace.dependencies]
+# Async runtime
+tokio = { version = "1.42", features = ["full"] }
+async-trait = "0.1"
+futures = "0.3"
+
+# HTTP
+axum = { version = "0.8", features = ["macros"] }
+axum-extra = { version = "0.10", features = ["typed-header"] }
+tower = { version = "0.5", features = ["full"] }
+tower-http = { version = "0.6", features = ["cors", "trace", "limit", "compression-gzip", "request-id", "set-header"] }
+hyper = "1.5"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_with = "3"
+
+# Database
+sqlx = { version = "0.8", features = ["runtime-tokio", "postgres", "uuid", "chrono", "json", "migrate"] }
+redis = { version = "0.27", features = ["tokio-comp", "connection-manager"] }
+
+# Auth / crypto
+jsonwebtoken = "9"
+blake3 = "1"
+sha2 = "0.10"
+hex = "0.4"
+base64 = "0.22"
+rand = "0.8"
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+secrecy = { version = "0.10", features = ["serde"] }
+
+# Blockchain
+alloy = { version = "0.9", features = ["full"] }
+
+# Observability
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+opentelemetry = "0.27"
+opentelemetry_sdk = { version = "0.27", features = ["rt-tokio"] }
+opentelemetry-otlp = { version = "0.27", features = ["grpc-tonic"] }
+tracing-opentelemetry = "0.28"
+metrics = "0.24"
+metrics-exporter-prometheus = "0.16"
+
+# Errors / validation
+thiserror = "2"
+anyhow = "1"
+validator = { version = "0.19", features = ["derive"] }
+
+# Utils
+dotenvy = "0.15"
+bytes = "1"
+parking_lot = "0.12"
+dashmap = "6"
+once_cell = "1"
+url = "2"
+regex = "1"
+utoipa = { version = "5", features = ["axum_extras", "chrono", "uuid"] }
+utoipa-swagger-ui = { version = "8", features = ["axum"] }
+qdrant-client = "1.12"
+aws-sdk-s3 = "1"
+aws-config = "1"
+aws-credential-types = "1"
+
+# Internal crates
+tempoforge-common = { path = "crates/common" }
+tempoforge-auth = { path = "crates/auth" }
+tempoforge-ai-engine = { path = "crates/ai-engine" }
+tempoforge-blockchain = { path = "crates/blockchain" }
+tempoforge-indexer = { path = "crates/indexer" }
+tempoforge-explorer = { path = "crates/explorer" }
+tempoforge-analytics = { path = "crates/analytics" }
+tempoforge-deployment = { path = "crates/deployment" }
+tempoforge-security = { path = "crates/security" }
+tempoforge-sdk-generator = { path = "crates/sdk-generator" }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true

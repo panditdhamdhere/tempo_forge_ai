@@ -1,0 +1,45 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build
+.next
+.turbo
+dist
+out
+target
+*.tsbuildinfo
+
+# Env
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# IDE
+.idea
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+.DS_Store
+
+# Logs / coverage
+*.log
+coverage
+playwright-report
+test-results
+
+# Secrets / keys
+*.pem
+*.key
+secrets/
+
+# Foundry
+contracts/cache
+contracts/out
+contracts/broadcast
+
+# Misc
+.vercel
+.clerk

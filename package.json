@@ -1,0 +1,32 @@
+{
+  "name": "tempoforge",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "dev:web": "turbo run dev --filter=@tempoforge/web",
+    "dev:api": "cargo watch -x 'run -p tempoforge-api' -w apps/api -w crates",
+    "build": "turbo run build && cargo build --release --workspace",
+    "build:web": "turbo run build --filter=@tempoforge/web",
+    "build:api": "cargo build --release -p tempoforge-api",
+    "lint": "turbo run lint && cargo clippy --workspace -- -D warnings",
+    "test": "turbo run test && cargo test --workspace",
+    "test:e2e": "turbo run test:e2e --filter=@tempoforge/web",
+    "typecheck": "turbo run typecheck",
+    "db:migrate": "sqlx migrate run",
+    "db:seed": "cargo run -p tempoforge-api --bin seed",
+    "docker:up": "docker compose -f infrastructure/docker/docker-compose.yml up -d",
+    "docker:down": "docker compose -f infrastructure/docker/docker-compose.yml down",
+    "setup": "bash scripts/setup.sh",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\" && cargo fmt --all"
+  },
+  "devDependencies": {
+    "prettier": "^3.4.2",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

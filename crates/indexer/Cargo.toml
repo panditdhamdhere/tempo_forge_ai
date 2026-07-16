@@ -1,0 +1,16 @@
+[package]
+name = "tempoforge-indexer"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Tempo chain indexer workers"
+
+[dependencies]
+tempoforge-common.workspace = true
+tempoforge-blockchain.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+async-trait.workspace = true
+chrono.workspace = true

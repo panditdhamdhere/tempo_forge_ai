@@ -1,0 +1,15 @@
+[package]
+name = "tempoforge-deployment"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Contract deployment tracking and environment management"
+
+[dependencies]
+tempoforge-common.workspace = true
+tempoforge-blockchain.workspace = true
+chrono.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+uuid.workspace = true
+tracing.workspace = true

@@ -1,0 +1,17 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+
+/// @title TempoForgeToken
+/// @notice Example ERC-20 used by TempoForge demos (TIP-20 fee compatible on Tempo).
+contract TempoForgeToken is ERC20, Ownable {
+    constructor(address initialOwner) ERC20("TempoForge", "TFAI") Ownable(initialOwner) {
+        _mint(initialOwner, 1_000_000 ether);
+    }
+
+    function mint(address to, uint256 amount) external onlyOwner {
+        _mint(to, amount);
+    }
+}

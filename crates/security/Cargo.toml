@@ -1,0 +1,17 @@
+[package]
+name = "tempoforge-security"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Static security analysis heuristics for Solidity contracts"
+
+[dependencies]
+tempoforge-common.workspace = true
+tempoforge-ai-engine.workspace = true
+regex.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+chrono.workspace = true
+uuid.workspace = true
