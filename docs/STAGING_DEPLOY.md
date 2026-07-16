@@ -31,6 +31,8 @@ docker compose \
   up -d --build
 ```
 
+If the **web** image fails on `corepack`/`pnpm` network errors, retry once (registry blips are common). The Dockerfile installs pnpm via `npm install -g` with retries, and `.dockerignore` keeps the build context small (without it Docker may send 1GB+ of `node_modules`).
+
 Smoke tests:
 
 ```bash
