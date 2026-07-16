@@ -1,17 +1,28 @@
+# syntax=docker/dockerfile:1.7
 FROM rust:1.92-bookworm AS builder
 WORKDIR /app
-COPY Cargo.toml Cargo.lock* ./
+COPY Cargo.toml Cargo.lock ./
 COPY apps/api apps/api
 COPY apps/cli apps/cli
 COPY crates crates
 COPY migrations migrations
-RUN cargo build --release -p tempoforge-api
+RUN cargo build --release -p tempoforge-api \
+ && strip target/release/tempoforge-api || true
 
-FROM debian:bookworm-slim
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
+FROM debian:bookworm-slim AS runtime
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates curl \
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd --system --create-home --uid 10001 tempoforge
 WORKDIR /app
 COPY --from=builder /app/target/release/tempoforge-api /usr/local/bin/tempoforge-api
 COPY migrations /app/migrations
-ENV APP_ENV=production
+USER tempoforge
+ENV APP_ENV=staging \
+    API_HOST=0.0.0.0 \
+    API_PORT=8080 \
+    RUST_LOG=info,tempoforge=info
 EXPOSE 8080
+HEALTHCHECK --interval=20s --timeout=5s --start-period=40s --retries=5 \
+  CMD curl -fsS http://127.0.0.1:8080/api/v1/health || exit 1
 CMD ["tempoforge-api"]

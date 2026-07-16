@@ -40,15 +40,22 @@ impl FromRequestParts<AppState> for AuthUser {
             .strip_prefix("Bearer ")
             .ok_or_else(|| AppError::Unauthorized("expected Bearer token".into()))?;
 
-        if token == "dev" && state.config.allow_dev_auth {
-            return Ok(AuthUser(ensure_dev_user(state).await?));
+        if token == "dev" {
+            if state.config.allow_dev_auth {
+                return Ok(AuthUser(ensure_dev_user(state).await?));
+            }
+            return Err(AppError::Unauthorized(
+                "development bearer token is disabled in this environment".into(),
+            ));
         }
 
         let Some(clerk) = &state.clerk else {
             if state.config.allow_dev_auth {
                 return Ok(AuthUser(ensure_dev_user(state).await?));
             }
-            return Err(AppError::Unauthorized("auth provider not configured".into()));
+            return Err(AppError::Unauthorized(
+                "auth provider not configured — set CLERK_JWKS_URL and CLERK_ISSUER".into(),
+            ));
         };
 
         let mut ctx = clerk.authenticate(token).await?;

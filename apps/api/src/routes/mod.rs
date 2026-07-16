@@ -11,6 +11,7 @@ mod projects;
 mod sdk;
 mod secrets;
 
+use crate::cors::build_cors_layer;
 use crate::middleware::metrics::track_metrics;
 use crate::middleware::request_id::attach_request_id;
 use crate::middleware::security_headers::security_headers;
@@ -20,7 +21,6 @@ use axum::{
     middleware,
     routing::{get, post},
 };
-use tower_http::cors::{Any, CorsLayer};
 use tower_http::limit::RequestBodyLimitLayer;
 use tower_http::trace::TraceLayer;
 
@@ -65,6 +65,8 @@ pub fn router(state: AppState) -> Router {
         .route("/secrets/{name}", get(secrets::reveal_secret))
         .route("/openapi.json", get(openapi_spec));
 
+    let cors = build_cors_layer(&state.config.cors_origins, state.config.allow_dev_auth);
+
     Router::new()
         .nest("/api/v1", api)
         .layer(RequestBodyLimitLayer::new(2 * 1024 * 1024))
@@ -72,12 +74,7 @@ pub fn router(state: AppState) -> Router {
         .layer(middleware::from_fn(track_metrics))
         .layer(middleware::from_fn(attach_request_id))
         .layer(TraceLayer::new_for_http())
-        .layer(
-            CorsLayer::new()
-                .allow_origin(Any)
-                .allow_methods(Any)
-                .allow_headers(Any),
-        )
+        .layer(cors)
         .with_state(state)
 }
 

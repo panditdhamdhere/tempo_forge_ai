@@ -35,7 +35,7 @@ cargo run -p tempoforge-api
 pnpm --filter @tempoforge/web dev
 ```
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md).
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md), and [docs/STAGING_DEPLOY.md](docs/STAGING_DEPLOY.md).
 
 ## API
 

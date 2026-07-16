@@ -1,4 +1,5 @@
 mod config;
+mod cors;
 mod middleware;
 mod repositories;
 mod routes;
@@ -28,7 +29,14 @@ async fn main() -> anyhow::Result<()> {
     let app = routes::router(state);
 
     let addr = SocketAddr::from((config.host, config.port));
-    tracing::info!(%addr, "TempoForge API listening");
+    tracing::info!(
+        %addr,
+        env = %config.app_env,
+        app_url = %config.app_url,
+        api_public_url = %config.api_public_url,
+        cors = ?config.cors_origins,
+        "TempoForge API listening"
+    );
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
     axum::serve(listener, app)

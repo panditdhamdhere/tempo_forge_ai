@@ -39,6 +39,11 @@ impl AppState {
         }
 
         let clerk = if config.clerk_jwks_url.is_empty() || config.clerk_issuer.is_empty() {
+            if config.is_prod_like() {
+                return Err(AppError::Internal(
+                    "Clerk JWKS/issuer required in staging/production".into(),
+                ));
+            }
             tracing::warn!("Clerk JWKS/issuer not configured — using development auth bypass");
             None
         } else {

@@ -1,0 +1,36 @@
+# Fly.io API app — https://fly.io/docs/
+#   fly apps create tempoforge-api
+#   fly secrets set DATABASE_URL=... CLERK_JWKS_URL=... ...
+#   fly deploy -c infrastructure/fly/fly.api.toml
+
+app = "tempoforge-api"
+primary_region = "iad"
+
+[build]
+  dockerfile = "infrastructure/docker/Dockerfile.api"
+
+[env]
+  APP_ENV = "staging"
+  API_HOST = "0.0.0.0"
+  API_PORT = "8080"
+  ALLOW_DEV_AUTH = "false"
+  RUST_LOG = "info,tempoforge=info"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    interval = "20s"
+    timeout = "5s"
+    grace_period = "40s"
+    method = "GET"
+    path = "/api/v1/health"
+
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1
